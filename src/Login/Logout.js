@@ -4,7 +4,7 @@ import api from "../api";
 const Logout = () => {
 
     const handleLogout = async () => {
-        api.post('api/auth/logout/')
+        api.post('users/logout/')
       .then(response => {
         localStorage.removeItem('token');
         window.location.href = '/';

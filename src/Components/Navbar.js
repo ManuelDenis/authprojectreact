@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Nav, Navbar } from 'react-bootstrap';
+import {Container, Nav, Navbar, NavDropdown} from 'react-bootstrap';
 import '../App.css';
 
 function Navbars() {
@@ -50,12 +50,28 @@ function Navbars() {
                     <Nav className="me-auto my-2 my-lg-0" navbarScroll>
                         {token ? (
                             <>
-                                <Nav.Link href="#" onClick={logout}>Logout</Nav.Link>
+                                <Nav.Link href="/CompanyPage" className="nav-link">Company</Nav.Link>
+            <NavDropdown title="Company" id="basic-nav-dropdown">
+              <NavDropdown.Item href="/CompanyPage">Company details</NavDropdown.Item>
+
+              <NavDropdown.Item href="/CategoriesandServices">
+                Manage Categories
+              </NavDropdown.Item>
+
+              <NavDropdown.Item href="/Employee">
+                Employees
+              </NavDropdown.Item>
+
+                <NavDropdown.Divider />
+              <NavDropdown.Item href="#action/3.4">
+                Separated link
+              </NavDropdown.Item>
+            </NavDropdown>                                <Nav.Link href="#" onClick={logout} className="nav-link">Logout</Nav.Link>
                             </>
                         ) : (
                             <>
-                                <Nav.Link href="/Login"><strong>Login</strong></Nav.Link>
-                                <Nav.Link href="/Register">Register</Nav.Link>
+                                <Nav.Link href="/Login" className="nav-link"><strong>Login</strong></Nav.Link>
+                                <Nav.Link href="/Register" className="nav-link">Register</Nav.Link>
                             </>
                         )}
                     </Nav>

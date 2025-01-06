@@ -6,6 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import api from "../api";
 
 const Login = () => {
+  const [token, setToken] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,6 +21,7 @@ const Login = () => {
         password: password,
       });
       localStorage.setItem('token', response.data.access_token);
+      setToken(response.data.access_token);
       window.location.href = '/';
     } catch (err) {
       if (err.response && err.response.data && err.response.data.detail) {
@@ -53,7 +55,7 @@ const Login = () => {
   const initializeGoogleSignIn = () => {
     if (window.google) {
       window.google.accounts.id.initialize({
-        client_id: 'xxxxxxxxxxxxxxx',
+        client_id: '857988839094-5kdqt2di2smmc0c3oo1hvkif1qanmcbj.apps.googleusercontent.com',
         callback: handleGoogleLoginSuccess,
         auto_select: false, // Ensures the user is prompted to select an account
       });
