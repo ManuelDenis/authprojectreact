@@ -23,6 +23,12 @@ import AddCategory from "./Components/AddCategory";
 import AddService from "./Components/AddService";
 import CategoriesandServices from "./Components/CategoriesandServices";
 import Employee from "./Components/Employee";
+import Client from "./Components/Client";
+import AddAppointment from "./Components/Createappointment";
+import AppointmentList from "./Components/AppointmentList";
+import AppointmentDetails from "./Components/AppointmentDetails";
+import Appointments from "./Components/Appointments";
+
 
 function App() {
     const responseMessage = (response) => {
@@ -60,6 +66,12 @@ function App() {
             <Route path="/AddService" element={<AddService />} />
 
             <Route path="/Employee" element={<Employee />} />
+
+            <Route path="/Appointments" element={<Appointments />} />
+            <Route path="/AddAppointment" element={<AddAppointment />} />
+            <Route path="/AppointmentList" element={<AppointmentList />} />
+            <Route path="/appointments/:id" element={<AppointmentDetails />} />
+            <Route path="/Client" element={<Client />} />
 
           </Routes>
         </Row>

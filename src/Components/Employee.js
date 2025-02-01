@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import {Table, Container, Spinner, Alert, Button, Modal, Form} from "react-bootstrap";
+import {Table, Container, Spinner, Button, Modal, Form } from "react-bootstrap";
 import { FaTrash } from "react-icons/fa";
-import {BsPlusCircleFill} from "react-icons/bs"; // Pentru iconița Delete
+import {BsPlusCircleFill} from "react-icons/bs";
+import {Col, Row} from "reactstrap";
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
+import Alert from '@mui/material/Alert';
+import dayjs from "dayjs";
 
 function EmployeeTable() {
   const [categories, setCategories] = useState([]);
@@ -15,6 +23,17 @@ function EmployeeTable() {
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  
+  const [employeeIdSchedule, setEmployeeIdSchedule] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [employeeSchedule, setEmployeeSchedule] = useState([]);
+
+  const [newSchedule, setNewSchedule] = useState({
+  day_of_week: 0,
+  start_time: "",
+  end_time: "",
+  });
+  const [errorTime, setErrorTime] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,48 +43,129 @@ function EmployeeTable() {
 
   const token = localStorage.getItem("token");
 
+  // useEffect for fetching data
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get("http://127.0.0.1:8000/api/service_category/", {
-          headers: { Authorization: `Token ${token}` },
-        });
-        setCategories(response.data);
-      } catch (err) {
-        setError("Failed to fetch categories.");
-      } finally {
-        setLoading(false);
-      }
-    };
     if (token) {
-      fetchCategories();
-      fetchEmployees();
-
+      fetchCategories(); // Call fetchCategories separately
+      fetchEmployees();  // Call fetchEmployees separately
     }
   }, [token]);
 
+
+  // Fetch categories function
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get("http://127.0.0.1:8000/api/service_category/", {
+        headers: { Authorization: `Token ${token}` },
+      });
+      setCategories(response.data);
+    } catch (err) {
+      setError("Failed to fetch categories.");
+    } finally {
+      setLoading(false);
+    }
+  };
   const fetchEmployees = async () => {
-      try {
-        const response = await axios.get("http://127.0.0.1:8000/api/employees/", {
-          headers: { Authorization: `Token ${token}` },
-        });
+  try {
+    const response = await axios.get("http://127.0.0.1:8000/api/employees/", {
+      headers: { Authorization: `Token ${token}` },
+    });
 
-        const data = response.data.map((employee) => ({
-          id: employee.id,
-          name: employee.name,
-          user: employee.user,
-          categories: employee.service_category_names.join(", "),
-          categories_id: employee.service_categories,
-        }));
+    const data = response.data.map((employee) => ({
+      id: employee.id,
+      name: employee.name,
+      user: employee.user,
+      categories: employee.service_category_names.join(", "),
+      categories_id: employee.service_categories,
+      work_schedules: employee.work_schedules,  // Adaugă work_schedules
+    }));
 
-        setEmployees(data);
-      } catch (err) {
-        setError("Failed to fetch employees.");
-      } finally {
-        setLoading(false);
+    setEmployees(data);
+  } catch (err) {
+    setError("Failed to fetch employees.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  const handleViewSchedule = (employee) => {
+  setEmployeeIdSchedule(employee.id); // Setăm ID-ul angajatului selectat
+  setEmployeeSchedule(employee.work_schedules); // Setăm programul angajatului
+  setShowScheduleModal(true); // Afișăm modalul
+};
+
+  // 🔹 Funcție care verifică dacă end_time este după start_time
+  const validateTimes = (start, end) => {
+  if (start && end) {
+    const startTime = dayjs(start, "HH:mm");
+    const endTime = dayjs(end, "HH:mm");
+
+    if (endTime.isBefore(startTime)) {
+      setErrorTime("End time must be after start time.");
+      return false;
+    }
+  }
+  setErrorTime(""); // 🔹 Șterge mesajul de eroare dacă totul e corect
+  return true;
+};
+
+  const handleAddSchedule = async () => {
+  if (newSchedule.day_of_week === null || newSchedule.day_of_week === undefined || !newSchedule.start_time || !newSchedule.end_time) {
+  setError("Please fill out all fields before adding a schedule.");
+  return;
+  }
+
+  try {
+    const response = await axios.post(
+      "http://127.0.0.1:8000/api/workschedule/",
+      {
+        employee: employeeIdSchedule,
+        day_of_week: newSchedule.day_of_week,
+        start_time: newSchedule.start_time,
+        end_time: newSchedule.end_time,
+      },
+      {
+        headers: { Authorization: `Token ${token}` },
       }
-    };
+    );
+
+    const newScheduleEntry = response.data;
+
+    // Actualizăm lista de programe afișată în modal
+    setEmployeeSchedule((prevSchedules) => [...prevSchedules, newScheduleEntry]);
+
+    // 🛠 Actualizăm lista principală `employees`
+    setEmployees((prevEmployees) =>
+      prevEmployees.map((emp) =>
+        emp.id === employeeIdSchedule
+          ? { ...emp, work_schedules: [...emp.work_schedules, newScheduleEntry] }
+          : emp
+      )
+    );
+
+    setNewSchedule({
+      day_of_week: 0,
+      start_time: "",
+      end_time: "",
+    });
+
+    setSuccess("Schedule added successfully.");
+    setTimeout(() => setSuccess(""), 2000); // 🛠️ Șterge mesajul după 2 secunde
+
+   } catch (err) {
+    if (err.response && err.response.data) {
+      if (err.response.data.non_field_errors) {
+        setError(err.response.data.non_field_errors[0]); // Capturăm eroarea de suprapunere
+        setTimeout(() => setError(''), 5000)
+      } else {
+        setError("Failed to add schedule.");
+      }
+    } else {
+      setError("An unexpected error occurred.");
+    }
+  }
+}
 
   const refreshData = async () => {
   try {
@@ -114,6 +214,7 @@ function EmployeeTable() {
 
     // Clear inputs and close modal
     setSuccess("Employee added successfully.");
+    setTimeout(() => setSuccess(""), 2000); // 🛠️ Șterge mesajul după 2 secunde
     setNewEmployeeName("");
     setSelectedCategories([]);
     setShowEmployeeModal(false);
@@ -222,8 +323,7 @@ function EmployeeTable() {
         </Spinner>
       )}
 
-      {error && <Alert variant="danger">{error}</Alert>}
-      {!loading && !error && employees.length > 0 ? (
+      {!loading && employees.length > 0 ? (
         <>
 
 <div className="mt-3 mb-3" title="Add new category" style={{ cursor: "pointer" }}>
@@ -258,7 +358,11 @@ function EmployeeTable() {
               </td>
               <td>{employee.categories || "No categories assigned"}</td>
               <td>
-                <Button variant="danger" size="sm" onClick={() => handleDeleteClick(employee)}>
+                <Button className='rounded-pill' size="sm" onClick={() => handleViewSchedule(employee)}>
+                    Schedule
+                </Button> |
+
+                <Button className='rounded-pill' variant="danger" size="sm" onClick={() => handleDeleteClick(employee)}>
                   <FaTrash /> Delete
                 </Button>
               </td>
@@ -398,6 +502,162 @@ function EmployeeTable() {
           </Button>
         </Modal.Footer>
       </Modal>
+
+
+
+
+
+      <Modal show={showScheduleModal} onHide={() => setShowScheduleModal(false)}>
+  <Modal.Header closeButton>
+<Modal.Title>
+{employees.find(emp => emp.id === employeeIdSchedule)?.name || "Employee name missing"} <br/>
+</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+  <h6 className='text-center'>Schedule list</h6><hr/>
+    {employeeSchedule.length > 0 ? (
+      <div>
+        {[...Array(7).keys()].map((dayIndex) => {
+          const daySchedules = employeeSchedule.filter(
+            (schedule) => schedule.day_of_week === dayIndex
+          );
+
+          return daySchedules.length > 0 ? (
+<ul className="list-unstyled">
+  <li>
+    <strong className='text-secondary'>
+      {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][dayIndex]}
+    </strong>
+    <ul className="list-unstyled">
+      {daySchedules.map((schedule, index) => (
+        <li key={index}>
+          {schedule.start_time.slice(0, 5)} - {schedule.end_time.slice(0, 5)}
+        </li>
+      ))}
+    </ul>
+  </li>
+</ul>
+
+          ) : null;
+        })}
+      </div>
+    ) : (
+      <p>No schedule available for this employee.</p>
+    )}
+
+
+
+
+    {/* Adaugăm formularul pentru adăugarea unui nou program */}
+  <h6 className='text-center mt-5'>Add new schedule</h6><hr/>
+<Form
+  onSubmit={(e) => {
+    e.preventDefault();
+    handleAddSchedule();
+  }}
+>
+
+
+<Form.Group className="mb-3">
+  <Form.Label>Select Day</Form.Label>
+  <div className="d-flex flex-wrap">
+    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, index) => (
+      <Button
+        key={index}
+        variant={newSchedule.day_of_week == index ? "primary" : "outline-secondary"}
+        className="m-1 small btn-sm"
+        onClick={() => setNewSchedule((prev) => ({ ...prev, day_of_week: index }))}
+      >
+        {day}
+      </Button>
+    ))}
+  </div>
+</Form.Group>
+
+  <Row>
+    <Col md={6}>
+      <Form.Group className="mb-3">
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DemoContainer components={['TimePicker']}>
+            <TimePicker
+              className="small-timepicker"
+              label="Start Time"
+              value={newSchedule.start_time ? dayjs(newSchedule.start_time, "HH:mm") : null}
+              onChange={(newValue) => {
+                setNewSchedule((prev) => ({
+                  ...prev,
+                  start_time: newValue ? newValue.format("HH:mm") : "",
+                }));
+                validateTimes(newValue ? newValue.format("HH:mm") : "", newSchedule.end_time);
+              }}
+              minutesStep={5}
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+              }}
+            />
+          </DemoContainer>
+        </LocalizationProvider>
+      </Form.Group>
+    </Col>
+
+    <Col md={6}>
+      <Form.Group className="mb-3">
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DemoContainer components={['TimePicker']}>
+            <TimePicker
+              className="small-timepicker"
+              label="End Time"
+              value={newSchedule.end_time ? dayjs(newSchedule.end_time, "HH:mm") : null}
+              onChange={(newValue) => {
+                setNewSchedule((prev) => ({
+                  ...prev,
+                  end_time: newValue ? newValue.format("HH:mm") : "",
+                }));
+                validateTimes(newSchedule.start_time, newValue ? newValue.format("HH:mm") : "");
+              }}
+              minutesStep={5}
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+              }}
+            />
+          </DemoContainer>
+        </LocalizationProvider>
+        {errorTime && <p className="text-danger small mt-1">{errorTime}</p>}
+      </Form.Group>
+    </Col>
+  </Row>
+
+{error && <Alert severity="error" className="mt-3">{error}</Alert>}
+<Row>
+
+  <Col>
+    <Button
+      type="submit"
+      className={`mt-3 ${success ? "bg-success-subtle text-dark" : "btn-primary"}`} // 🔄 Schimbă culoarea cu className
+      disabled={errorTime} // 🔄 Dezactivează în timpul procesării
+    >
+      {success ? success : "Add Schedule"} {/* 🔄 Schimbă textul */}
+    </Button>
+  </Col>
+</Row>
+
+
+
+</Form>
+
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setShowScheduleModal(false)}>
+      Close
+    </Button>
+  </Modal.Footer>
+</Modal>
+
+
+
+
     </Container>
 
   );

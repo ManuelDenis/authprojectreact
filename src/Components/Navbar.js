@@ -23,7 +23,7 @@ function Navbars() {
     };
 
     return (
-        <Navbar expand="lg" className="mb-5">
+        <Navbar expand="lg" className="mb-2">
             <Container>
                 <Navbar.Brand href="/"><h2>HomeApp</h2></Navbar.Brand>
                 <Navbar.Toggle aria-controls="basic-navbar-nav">
@@ -51,6 +51,30 @@ function Navbars() {
                         {token ? (
                             <>
                                 <Nav.Link href="/CompanyPage" className="nav-link">Company</Nav.Link>
+
+            <NavDropdown title="Appointments" id="basic-nav-dropdown">
+
+              <NavDropdown.Item href="/Appointments">
+                Appointments
+              </NavDropdown.Item>
+
+              <NavDropdown.Item href="/AppointmentList">
+                Appointment list
+              </NavDropdown.Item>
+
+              <NavDropdown.Item href="/AddAppointment">
+                Add Appointments
+              </NavDropdown.Item>
+
+                <NavDropdown.Divider />
+              <NavDropdown.Item href="#action/3.4">
+                Separated link
+              </NavDropdown.Item>
+            </NavDropdown>
+
+
+
+
             <NavDropdown title="Company" id="basic-nav-dropdown">
               <NavDropdown.Item href="/CompanyPage">Company details</NavDropdown.Item>
 
@@ -62,11 +86,20 @@ function Navbars() {
                 Employees
               </NavDropdown.Item>
 
+              <NavDropdown.Item href="/Client">
+                Clients
+              </NavDropdown.Item>
+
+              <NavDropdown.Item href="/AddAppointment">
+                Add Appointments
+              </NavDropdown.Item>
+
                 <NavDropdown.Divider />
               <NavDropdown.Item href="#action/3.4">
                 Separated link
               </NavDropdown.Item>
-            </NavDropdown>                                <Nav.Link href="#" onClick={logout} className="nav-link">Logout</Nav.Link>
+            </NavDropdown>
+                                <Nav.Link href="#" onClick={logout} className="nav-link">Logout</Nav.Link>
                             </>
                         ) : (
                             <>

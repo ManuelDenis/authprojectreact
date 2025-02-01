@@ -57,3 +57,27 @@ h1, h2, h3, h4, h5, h6, p, a, link {
   font-size: 12px;
   color: rgba(107, 82, 2, 0.98);
 }
+.appointments-page {
+  margin-top: 20px;
+}
+
+.appointments-list {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.calendar-section {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+h4 {
+  margin-bottom: 20px;
+}
+.small-timepicker {
+  width: 120px !important;
+  background: rgba(255, 160, 122, 0.29);
+  border-radius: 7px;
+}
